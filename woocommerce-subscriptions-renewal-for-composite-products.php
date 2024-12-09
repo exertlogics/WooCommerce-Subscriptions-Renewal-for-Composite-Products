@@ -1,10 +1,10 @@
 <?php
 /**
  * Plugin Name: WooCommerce Subscriptions Renewal for Composite Products
- * Plugin URI: https://exertlogics.com/solutions/wordpress/woocommerce-subscriptions-renewal-for-composite-products/
+ * Plugin URI: https://ifixwoocommerce.com/solutions/wordpress/woocommerce-subscriptions-renewal-for-composite-products/
  * Description: This plugin allows you to renew the subscription of composite products in WooCommerce Subscriptions via a separate renewal order.
  * Version: 1.0.0
- * Author: Syed Ali
+ * Author: Ifix WooCommerce
  * Author URI: https://ifixwoocommerce.com
  * Text Domain: woocommerce
  * Domain Path: /i18n/languages/
@@ -24,4 +24,4 @@ if ( ! class_exists( 'WSRCP\Kernel' ) ) {
 	include_once dirname( WSRCP_PLUGIN_FILE ) . '/includes/Kernel.php';
 }
 
-WSRCP\Kernel::instance();
+$kernel = WSRCP\Kernel::instance();

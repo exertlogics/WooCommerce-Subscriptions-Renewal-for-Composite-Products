@@ -1,0 +1,20 @@
+{
+    "name": "ifixwoocommerce/woocommerce-subscriptions-renewal-for-composite-products",
+    "description": "A WooCommerce plugin for handling subscription renewals for composite products.",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": ">=7.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "WSRCP\\": "includes/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Ifix WooCommerce",
+            "email": "support@ifixwoocommerce.com"
+        }
+    ],
+    "license": "GPL-2.0-or-later"
+}

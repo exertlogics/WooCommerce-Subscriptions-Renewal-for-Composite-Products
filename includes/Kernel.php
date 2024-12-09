@@ -2,6 +2,8 @@
 
 namespace WSRCP;
 
+// use WSRCP\Router;
+
 class Kernel {
     static $instance;
 
@@ -31,7 +33,7 @@ class Kernel {
     }
 
     public function includes() {
-        // 
+        require_once WSRCP_PLUGIN_PATH . 'vendor/autoload.php';
     }
 
     public function init_hooks() {

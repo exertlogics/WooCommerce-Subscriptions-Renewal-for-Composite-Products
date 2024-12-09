@@ -4,8 +4,11 @@ namespace WSRCP\Controllers;
 
 class RenewSubscription
 {
-    public function renew_subscription()
+    public static function renew_subscription()
     {
+        print_r('Renew Subscription Controller');
+        return true;
+
         $order_id = $_GET['order_id'];
         $order = wc_get_order($order_id);
 
