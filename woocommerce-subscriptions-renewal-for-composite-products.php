@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: WooCommerce Subscriptions Renewal for Composite Products
+ * Plugin Name: WooCommerce Subscriptions Renewal for Composite Products 🔁
  * Plugin URI: https://ifixwoocommerce.com/solutions/wordpress/woocommerce-subscriptions-renewal-for-composite-products/
  * Description: This plugin allows you to renew the subscription of composite products in WooCommerce Subscriptions via a separate renewal order.
  * Version: 1.0.0

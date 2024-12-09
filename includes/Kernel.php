@@ -2,8 +2,6 @@
 
 namespace WSRCP;
 
-// use WSRCP\Router;
-
 class Kernel {
     static $instance;
 
@@ -30,14 +28,18 @@ class Kernel {
         define( 'WSRCP_PLUGIN_FILE', WSRCP_PLUGIN_FILE );
         define( 'WSRCP_PLUGIN_PATH', plugin_dir_path( WSRCP_PLUGIN_FILE ) );
         define( 'WSRCP_PLUGIN_URL', plugin_dir_url( WSRCP_PLUGIN_FILE ) );
+        define( 'WSRCP_MODE', 'development' );
     }
 
     public function includes() {
         require_once WSRCP_PLUGIN_PATH . 'vendor/autoload.php';
+        // require_once WSRCP_PLUGIN_PATH . 'includes/Helpers/load_helpers.php';
     }
 
     public function init_hooks() {
-        // 
+        // add_action( 'woocommerce_subscription_after_actions', '' );
+        // add_filter( 'wcs_view_subscription_actions', 'WSRCP\Controllers\UserDashboard::modify_action_buttons' );
+        add_filter( 'wcs_view_subscription_actions', [ 'WSRCP\Controllers\UserDashboard', 'modify_action_buttons' ]);
     }
 
     public function bootstrap() {
