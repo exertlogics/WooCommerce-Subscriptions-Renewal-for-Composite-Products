@@ -6,6 +6,10 @@ namespace Composer\Autoload;
 
 class ComposerStaticInit473574ec73b8400d37a6e96daaba5204
 {
+    public static $files = array (
+        '4f752053a0747870568fa6ee28b69ced' => __DIR__ . '/../..' . '/includes/Helpers/load_helpers.php',
+    );
+
     public static $prefixLengthsPsr4 = array (
         'W' => 
         array (
@@ -22,6 +26,11 @@ class ComposerStaticInit473574ec73b8400d37a6e96daaba5204
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'WSRCP\\Controllers\\EmailController' => __DIR__ . '/../..' . '/includes/Controllers/EmailController.php',
+        'WSRCP\\Controllers\\RenewSubscription' => __DIR__ . '/../..' . '/includes/Controllers/RenewSubscription.php',
+        'WSRCP\\Controllers\\UserDashboard' => __DIR__ . '/../..' . '/includes/Controllers/UserDashboard.php',
+        'WSRCP\\Kernel' => __DIR__ . '/../..' . '/includes/Kernel.php',
+        'WSRCP\\Router' => __DIR__ . '/../..' . '/includes/Router.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

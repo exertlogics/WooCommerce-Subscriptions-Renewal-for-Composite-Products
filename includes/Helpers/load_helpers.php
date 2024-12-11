@@ -4,6 +4,7 @@
 
 // fetch print.php WordPress Helpers from github
 if (WSRCP_MODE === 'development') {
-    $wordpress_print_helpers = file_get_contents('https://raw.githubusercontent.com/imgul/awesome-code-utils/refs/heads/main/php/wordpress/print.php');
-    eval($wordpress_print_helpers);
+    require_once WSRCP_PLUGIN_PATH . 'includes/Helpers/print.php';
 }
+
+require_once WSRCP_PLUGIN_PATH . 'includes/Helpers/auth.php';

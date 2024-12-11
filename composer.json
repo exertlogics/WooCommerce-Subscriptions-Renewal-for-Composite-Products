@@ -8,7 +8,10 @@
     "autoload": {
         "psr-4": {
             "WSRCP\\": "includes/"
-        }
+        },
+        "files": [
+            "includes/Helpers/load_helpers.php"
+        ]
     },
     "authors": [
         {
