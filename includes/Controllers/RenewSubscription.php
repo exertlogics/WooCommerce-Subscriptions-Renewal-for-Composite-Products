@@ -1,30 +1,38 @@
 <?php
+// Ensure no output before setting cookies
 
 namespace WSRCP\Controllers;
 
 class RenewSubscription
 {
-    public static function renew_subscription()
+    public static function save_data_to_cookies()
     {
-        print_r('Renew Subscription Controller');
+        $renew_subscription = $_GET['renew_subscription'];
+        $subscription_id = $_GET['subscription_id'];
+        $user_id = $_GET['user_id'];
+        $via = $_GET['via'];
+        $callback_url = $_GET['callback_url'];
+        $cache = (int) $_GET['cache'];
+        $cache = $_GET['cache'] ? $_GET['cache'] : 0;
+
+        // Now save all these values to cookies
+        $validity_time = time() + (24 * 60 * 60); // 24 hours
+        setcookie('wsrcp_renew_subscription',   $renew_subscription,    $validity_time, '/');
+        setcookie('wsrcp_subscription_id',      $subscription_id,       $validity_time, '/');
+        setcookie('wsrcp_user_id',              $user_id,               $validity_time, '/');
+        setcookie('wsrcp_via',                  $via,                   $validity_time, '/');
+        setcookie('wsrcp_callback_url',         $callback_url,          $validity_time, '/');
+        setcookie('wsrcp_cache',                $cache,                 $validity_time, '/');
+
+        // Output JavaScript to show an alert
+        $html = '';
+        $html .= '<div class="alert success">';
+        $html .= '<span class="closebtn" onclick="this.parentElement.style.display=\'none\';">&times;</span>';
+        $html .= '<strong>Welcome back 👋!</strong> Dear valued customer! we are happy to see you back. Please select the composite product and it\'s items to renew your current subscription';
+        $html .= '</div>';
+
+        echo $html;
+
         return true;
-
-        $order_id = $_GET['order_id'];
-        $order = wc_get_order($order_id);
-
-        if ($order->get_meta('renewed')) {
-            return;
-        }
-
-        $renewal_order = wc_create_order([
-            'customer_id' => $order->get_customer_id(),
-            'status' => 'pending',
-        ]);
-
-        $renewal_order->add_product($order->get_items(), $order->get_items());
-        $renewal_order->calculate_totals();
-
-        $order->update_meta_data('renewed', true);
-        $order->save();
     }
 }

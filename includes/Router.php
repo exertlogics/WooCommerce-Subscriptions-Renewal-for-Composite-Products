@@ -10,6 +10,9 @@ class Router
     public function __construct()
     {
         add_action('template_redirect', [$this, 'register_routes']);
+        // add_filter( 'wcs_view_subscription_actions', [ 'WSRCP\Controllers\UserDashboard', 'modify_action_buttons' ]);
+        // Make this above filter to run with the least priority
+        add_filter('wcs_view_subscription_actions', [ 'WSRCP\Controllers\UserDashboard', 'modify_action_buttons' ], 15, 3);
     }
 
     public function register_routes()
@@ -25,8 +28,8 @@ class Router
         // }
 
         if (isset($_GET['renew_subscription'])) {
-            RenewSubscription::renew_subscription();
-            wp_die('Renew Subscription Route');
+            RenewSubscription::save_data_to_cookies();
+            return true;
         }
 
         // if (strpos($_SERVER['REQUEST_URI'], 'renew_subscription') !== false) {

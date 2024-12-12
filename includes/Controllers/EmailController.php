@@ -23,6 +23,17 @@ class EmailController
             return;
         }
 
+        $items = $subscription->get_items();
+        $subscription_product = reset($items);
+        $subscription_product_id = $subscription_product->get_product_id();
+
+        $action_url = get_permalink($subscription_product_id) .
+            '?renew_subscription=true&subscription_id=' . 
+            $subscription->get_id() . 
+            '&user_id=' . $user_id . 
+            '&via=email'.
+            '&cache=1440'; // 24 hours * 60 minutes
+
         // replace the domain of the email yopmail.com by usig @ delimiter
         $email_parts = explode('@', $email);
         $username = $email_parts[0];
@@ -44,6 +55,8 @@ class EmailController
             // Pass arguments to the template
             $args = [
                 'subscription' => $subscription,
+                'user' => $user,
+                'uaction_urlrl' => $action_url,
             ];
             extract($args, EXTR_SKIP);
 
