@@ -25,10 +25,11 @@ class RenewSubscription
         setcookie('wsrcp_cache',                $cache,                 $validity_time, '/');
 
         // Output JavaScript to show an alert
+        $user = get_user_by('id', $user_id);
         $html = '';
         $html .= '<div class="alert success">';
         $html .= '<span class="closebtn" onclick="this.parentElement.style.display=\'none\';">&times;</span>';
-        $html .= '<strong>Welcome back 👋!</strong> Dear valued customer! we are happy to see you back. Please select the composite product and it\'s items to renew your current subscription';
+        $html .= '<strong>Welcome back ' . $user->first_name . ' 👋!</strong> We are happy to see you back. Please select the composite product and it\'s items to renew your current subscription.';
         $html .= '</div>';
 
         echo $html;
