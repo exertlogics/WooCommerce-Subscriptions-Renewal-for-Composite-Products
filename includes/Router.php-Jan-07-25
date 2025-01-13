@@ -31,7 +31,8 @@ class Router
         // do_action( 'subscriptions_activated_for_order', $order_id );
         add_action('subscriptions_activated_for_order', [ 'WSRCP\Controllers\RenewSubscription', 'subscriptions_activated_for_order' ], 10, 1);
 
-        add_action('woocommerce_scheduled_subscription_payment', [ 'WSRCP\Controllers\RenewSubscription', 'woocommerce_scheduled_subscription_payment' ], 10, -1);
+        add_action('woocommerce_scheduled_subscription_payment', [ 'WSRCP\Controllers\RenewSubscription', 'woocommerce_scheduled_subscription_payment' ], 10, 1);
+
 
     }
 
@@ -57,7 +58,7 @@ class Router
         // if (strpos($_SERVER['REQUEST_URI'], 'renew_subscription') !== false) {
         //     RenewSubscription::renew_subscription();
         //     wp_die('Renew Subscription Router 2');
-        // }
+        // }x
     }
 
     public function send_renewal_email()
@@ -114,8 +115,8 @@ class Router
 
             $subscription->update_dates(
                 array(
-                    'next_payment' => date('Y-m-d H:i:s'),
-                    // 'next_payment' => date('Y-m-d H:i:s', strtotime('+1 day')),
+                    // 'next_payment' => date('Y-m-d H:i:s'),
+                    'next_payment' => date('Y-m-d H:i:s', strtotime('+1 day')),
                 )
             );
 

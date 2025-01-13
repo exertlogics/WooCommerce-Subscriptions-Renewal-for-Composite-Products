@@ -4,9 +4,9 @@ namespace WSRCP\Controllers;
 
 class EmailController
 {
-    public static function process_renewal_email()
+    public static function process_renewal_email($subscription_id)
     {
-        $subscription_id = 297176;
+        // $subscription_id = 297176;
         $subscription = wcs_get_subscription($subscription_id);
 
         if ( ! $subscription ) {
@@ -38,7 +38,8 @@ class EmailController
         $email_parts = explode('@', $email);
         $username = $email_parts[0];
         // $email = $username . '@yopmail.com';
-        $email = 'test-email-ivan@yopmail.com';
+        // $email = 'test-email-ivan@yopmail.com';
+        // $email = 'fricrausaquobau-1295@yopmail.com';
         // print_better($email, 'Email');
 
         $subject = 'Subscription Renewal Reminder';
