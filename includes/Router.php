@@ -4,10 +4,13 @@ namespace WSRCP;
 
 use WSRCP\Controllers\EmailController;
 use WSRCP\Controllers\RenewSubscription;
+use WSRCP\Traits\RenewalTrait;
 use Automattic\WooCommerce\Admin\Overrides\Order;
 
 class Router
 {
+    use RenewalTrait;
+
     public function __construct()
     {
         add_action('template_redirect', [$this, 'register_routes']);
@@ -355,85 +358,12 @@ class Router
             return;
         }
 
-        wsrcp_log("This is an info message");
-        wsrcp_info("This is an info message by info");
-        wsrcp_error("This is an error message");
-        wsrcp_debug("This is a debug message");
-        die();
+        $renewalable_subscriptions = $this->getRenewableSubscriptions();
 
-        // $log_file = 'wp-content/plugins/woocommerce-subscriptions-renewal-for-composite-products/logs.txt';
-        // $file = fopen($log_file, 'a');
-        // Add time date to the log + Add the current file name and line number
-        // fwrite($file, date('Y-m-d H:i:s') . ' ' . __FILE__ . ':' . __LINE__ . " in function: " . __FUNCTION__ . "\n");
+        wsrcp_log('Checking for upcoming renewals');
+        wsrcp_log($renewalable_subscriptions);
 
-        // Get all the subscriptions
-        $subscriptions = wcs_get_subscriptions(array(
-            'status' => 'active',
-            'limit' => -1,
-        ));
+        print_better($renewalable_subscriptions, 'Renewable Subscriptions');
 
-        // print_better($subscriptions, 'Subscriptions');
-        // die();
-
-        $renewalable_subscriptions = null;
-
-        foreach ($subscriptions as $subscription) {
-            // print_better($subscription, 'Subscription');
-            // die();
-
-            $next_payment_date = $subscription->get_date('next_payment');
-            // fwrite($file, "Subscription ID ==> " . $subscription->get_id() . " ==> Next Payment Date ==> " . $next_payment_date . "\n");
-            // print_better($next_payment_date, 'Next Payment Date');
-            // die();
-
-            $today = new \DateTime();
-            $today->setTime(0, 0, 0);
-            $next_payment_date = new \DateTime($next_payment_date);
-            $next_payment_date->setTime(0, 0, 0);
-
-            $interval = $today->diff($next_payment_date);
-            $days = $interval->format('%R%a');
-
-            // fwrite($file, "Subscription ID ==> " . $subscription->get_id() . " ==> Days ==> " . $days . "\n\n");
-            // print_better($days, 'Days');
-
-            // print_better(
-            //     [
-            //         'Next Payment Date' => $next_payment_date,
-            //         'Days Pending' => $days,
-            //     ],
-            //     'Subscription ID: ' . $subscription->get_id()
-            // );
-
-            // die();
-
-            if ($days <= 10) {
-                // print_better(
-                //     [
-                //         'Next Payment Date' => $next_payment_date,
-                //         'Days Pending' => $days,
-                //     ],
-                //     'Subscription ID: ' . $subscription->get_id()
-                // );
-                // print_better($subscription, 'Subscription');
-                // die();
-
-                $renewalable_subscriptions[] = [
-                    'subscription_id' => $subscription->get_id(),
-                    'next_payment_date' => $next_payment_date,
-                    'days_pending' => $days,
-                ];
-
-            }
-
-        }
-
-        // fclose($file);
-
-        // print_better($renewalable_subscriptions, 'Renewalable Subscriptions');
-
-        // die();
-
-        return $renewalable_subscriptions;
     }
 }
