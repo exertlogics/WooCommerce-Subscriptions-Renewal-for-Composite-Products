@@ -4,7 +4,7 @@ namespace WSRCP\Helpers;
 class Logger {
     private static $instance = null;
     private $log_file;
-    private const MAX_LOG_SIZE = 20000000; // 20MB in bytes
+    private const MAX_LOG_SIZE = 1000000; // 1MB in bytes
     private const BACKUP_DIR = 'log-archives';
     
     private function __construct() {
@@ -60,6 +60,32 @@ class Logger {
         }
     }
 
+    private function formatMessage($message) {
+        if (is_array($message)) {
+            return "Array:\n" . print_r($message, true);
+        }
+        
+        if (is_object($message)) {
+            try {
+                return "Object:\n" . json_encode($message, JSON_PRETTY_PRINT);
+            } catch (\Exception $e) {
+                return "Object:\n" . print_r($message, true);
+            }
+        }
+        
+        if ($this->isJson($message)) {
+            return "JSON:\n" . json_encode(json_decode($message), JSON_PRETTY_PRINT);
+        }
+        
+        return (string) $message;
+    }
+
+    private function isJson($string) {
+        if (!is_string($string)) return false;
+        json_decode($string);
+        return (json_last_error() == JSON_ERROR_NONE);
+    }
+
     public function log($message, $level = 'INFO') {
         // Check and rotate if needed
         if ($this->shouldRotateLog()) {
@@ -70,13 +96,14 @@ class Logger {
         $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
         $caller = isset($backtrace[1]) ? $backtrace[1] : $backtrace[0];
         
+        $formatted_message = $this->formatMessage($message);
         $log_message = sprintf(
-            "[%s] [%s] %s:%d - %s\n",
+            "[%s] [%s] %s:%d\n%s\n",
             $datetime,
             $level,
             basename($caller['file']),
             $caller['line'],
-            $message
+            $formatted_message
         );
         
         $file = fopen($this->log_file, 'a');
