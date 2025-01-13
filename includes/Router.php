@@ -2,9 +2,9 @@
 
 namespace WSRCP;
 
-use Automattic\WooCommerce\Admin\Overrides\Order;
 use WSRCP\Controllers\EmailController;
 use WSRCP\Controllers\RenewSubscription;
+use Automattic\WooCommerce\Admin\Overrides\Order;
 
 class Router
 {
@@ -355,10 +355,16 @@ class Router
             return;
         }
 
-        $log_file = 'wp-content/plugins/woocommerce-subscriptions-renewal-for-composite-products/logs.txt';
-        $file = fopen($log_file, 'a');
+        wsrcp_log("This is an info message");
+        wsrcp_info("This is an info message by info");
+        wsrcp_error("This is an error message");
+        wsrcp_debug("This is a debug message");
+        die();
+
+        // $log_file = 'wp-content/plugins/woocommerce-subscriptions-renewal-for-composite-products/logs.txt';
+        // $file = fopen($log_file, 'a');
         // Add time date to the log + Add the current file name and line number
-        fwrite($file, date('Y-m-d H:i:s') . ' ' . __FILE__ . ':' . __LINE__ . " in function: " . __FUNCTION__ . "\n");
+        // fwrite($file, date('Y-m-d H:i:s') . ' ' . __FILE__ . ':' . __LINE__ . " in function: " . __FUNCTION__ . "\n");
 
         // Get all the subscriptions
         $subscriptions = wcs_get_subscriptions(array(
@@ -368,6 +374,8 @@ class Router
 
         // print_better($subscriptions, 'Subscriptions');
         // die();
+
+        $renewalable_subscriptions = null;
 
         foreach ($subscriptions as $subscription) {
             // print_better($subscription, 'Subscription');
@@ -400,56 +408,32 @@ class Router
             // die();
 
             if ($days <= 10) {
-                print_better(
-                    [
-                        'Next Payment Date' => $next_payment_date,
-                        'Days Pending' => $days,
-                    ],
-                    'Subscription ID: ' . $subscription->get_id()
-                );
+                // print_better(
+                //     [
+                //         'Next Payment Date' => $next_payment_date,
+                //         'Days Pending' => $days,
+                //     ],
+                //     'Subscription ID: ' . $subscription->get_id()
+                // );
                 // print_better($subscription, 'Subscription');
                 // die();
 
-                // $order_id = $subscription->get_parent_id();
-                // $order = wc_get_order($order_id);
-                // // print_better($order, 'Order');
-                // // die();
-
-                // $user_id = $order->get_user_id();
-                // // print_better($user_id, 'User ID');
-                // // die();
-
-                // $subscription_id = $subscription->get_id();
-                // // print_better($subscription_id, 'Subscription ID');
-                // // die();
-
-                // $renewal_subscription = wcs_get_subscription($subscription_id);
-                // // print_better($renewal_subscription, 'Renewal Subscription');
-                // // die();
-
-                // $renewal_subs_items = $renewal_subscription->get_items();
-                // // print_better($renewal_subs_items, 'Renewal Subscription Items');
-                // // die();
-
-                // $renewal_subs_item = reset($renewal_subs_items);
-                // // print_better($renewal_subs_item, 'Renewal Subscription Item');
-                // // die();
-
-                // $active_subscription_scheme = $renewal_subs_item->get_meta('_wcsatt_scheme');
-                // // print_better($active_subscription_scheme, 'Active Subscription Scheme');
-                // // die();
-
-                // $renewal_subs_start_date = $renewal_subscription->get_date('start');
-                // // print
-                // // _better($renewal_subs_start_date, 'Renewal Subscription Start Date');
-                // // die();
+                $renewalable_subscriptions[] = [
+                    'subscription_id' => $subscription->get_id(),
+                    'next_payment_date' => $next_payment_date,
+                    'days_pending' => $days,
+                ];
 
             }
 
         }
 
-        fclose($file);
+        // fclose($file);
 
-        die();
+        // print_better($renewalable_subscriptions, 'Renewalable Subscriptions');
+
+        // die();
+
+        return $renewalable_subscriptions;
     }
 }

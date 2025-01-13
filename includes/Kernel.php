@@ -26,7 +26,7 @@ class Kernel {
 
     public function define_constants() {
         define( 'WSRCP_VERSION', '1.0.0' );
-        define( 'WSRCP_PLUGIN_FILE', WSRCP_PLUGIN_FILE );
+        // define( 'WSRCP_PLUGIN_FILE', WSRCP_PLUGIN_FILE );
         define( 'WSRCP_PLUGIN_PATH', plugin_dir_path( WSRCP_PLUGIN_FILE ) );
         define( 'WSRCP_PLUGIN_URL', plugin_dir_url( WSRCP_PLUGIN_FILE ) );
         define( 'WSRCP_MODE', 'development' );
