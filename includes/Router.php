@@ -41,6 +41,9 @@ class Router
         $this->send_renewal_email();
         $this->order_meta();
         $this->subscription_meta();
+
+        // Check the subscriptions which have the next payment date within 10 days
+        $this->check_for_upcoming_renewals();
     }
 
     public function register_renewal_route()
@@ -103,6 +106,7 @@ class Router
             die( __FILE__ . ':' . __LINE__ . ' - Function: ' . __FUNCTION__ );
         }
         
+        // Handle: ?subscription_update=297517&next_payment_date=2025-01-18
         if (isset($_GET['subscription_update'])) 
         {
             $subscription_id = $_GET['subscription_update'];
@@ -112,12 +116,28 @@ class Router
             // $subscription_status = $subscription->get_status();
             // print_better($subscription_status, 'Subscription Status');
 
-            $subscription->update_dates(
-                array(
-                    'next_payment' => date('Y-m-d H:i:s'),
-                    // 'next_payment' => date('Y-m-d H:i:s', strtotime('+1 day')),
-                )
-            );
+            $next_payment_date = $_GET['next_payment_date'];
+            if (empty($next_payment_date) || $next_payment_date === '0000-00-00' || !isset($next_payment_date)) {
+                $next_payment_date = date('Y-m-d');
+            }
+            $next_payment_date = date('Y-m-d H:i:s', strtotime($next_payment_date));
+            print_better($next_payment_date, 'Next Payment Date');
+            // die();
+
+            try {
+                $subscription->update_dates(
+                    array(
+                        'next_payment' => $next_payment_date,
+                        // 'next_payment' => date('Y-m-d H:i:s', strtotime('+1 day')),
+                        'trial_end' => date('Y-m-d H:i:s', strtotime($next_payment_date . ' - 16 days')),
+                        'start' => date('Y-m-d H:i:s', strtotime($next_payment_date . ' - 20 days')),
+                    )
+                );
+            } catch (\Exception $e) {
+                print_better($e->getMessage(), 'Error');
+            }
+
+            print_better('Subscription Updated', 'Subscription Updated');
 
             $subscription_next_payment_date = $subscription->get_date('next_payment');
             print_better($subscription_next_payment_date, 'Subscription Next Payment Date');
@@ -323,5 +343,113 @@ class Router
             print_better($meta, 'Order Meta');
             die();
         }
+    }
+
+    public function check_for_upcoming_renewals()
+    {
+        // if (!is_superadmin()) {
+        //     return;
+        // }
+
+        if (!isset($_GET['check_for_upcoming_renewals'])) {
+            return;
+        }
+
+        $log_file = 'wp-content/plugins/woocommerce-subscriptions-renewal-for-composite-products/logs.txt';
+        $file = fopen($log_file, 'a');
+        // Add time date to the log + Add the current file name and line number
+        fwrite($file, date('Y-m-d H:i:s') . ' ' . __FILE__ . ':' . __LINE__ . " in function: " . __FUNCTION__ . "\n");
+
+        // Get all the subscriptions
+        $subscriptions = wcs_get_subscriptions(array(
+            'status' => 'active',
+            'limit' => -1,
+        ));
+
+        // print_better($subscriptions, 'Subscriptions');
+        // die();
+
+        foreach ($subscriptions as $subscription) {
+            // print_better($subscription, 'Subscription');
+            // die();
+
+            $next_payment_date = $subscription->get_date('next_payment');
+            // fwrite($file, "Subscription ID ==> " . $subscription->get_id() . " ==> Next Payment Date ==> " . $next_payment_date . "\n");
+            // print_better($next_payment_date, 'Next Payment Date');
+            // die();
+
+            $today = new \DateTime();
+            $today->setTime(0, 0, 0);
+            $next_payment_date = new \DateTime($next_payment_date);
+            $next_payment_date->setTime(0, 0, 0);
+
+            $interval = $today->diff($next_payment_date);
+            $days = $interval->format('%R%a');
+
+            // fwrite($file, "Subscription ID ==> " . $subscription->get_id() . " ==> Days ==> " . $days . "\n\n");
+            // print_better($days, 'Days');
+
+            // print_better(
+            //     [
+            //         'Next Payment Date' => $next_payment_date,
+            //         'Days Pending' => $days,
+            //     ],
+            //     'Subscription ID: ' . $subscription->get_id()
+            // );
+
+            // die();
+
+            if ($days <= 10) {
+                print_better(
+                    [
+                        'Next Payment Date' => $next_payment_date,
+                        'Days Pending' => $days,
+                    ],
+                    'Subscription ID: ' . $subscription->get_id()
+                );
+                // print_better($subscription, 'Subscription');
+                // die();
+
+                // $order_id = $subscription->get_parent_id();
+                // $order = wc_get_order($order_id);
+                // // print_better($order, 'Order');
+                // // die();
+
+                // $user_id = $order->get_user_id();
+                // // print_better($user_id, 'User ID');
+                // // die();
+
+                // $subscription_id = $subscription->get_id();
+                // // print_better($subscription_id, 'Subscription ID');
+                // // die();
+
+                // $renewal_subscription = wcs_get_subscription($subscription_id);
+                // // print_better($renewal_subscription, 'Renewal Subscription');
+                // // die();
+
+                // $renewal_subs_items = $renewal_subscription->get_items();
+                // // print_better($renewal_subs_items, 'Renewal Subscription Items');
+                // // die();
+
+                // $renewal_subs_item = reset($renewal_subs_items);
+                // // print_better($renewal_subs_item, 'Renewal Subscription Item');
+                // // die();
+
+                // $active_subscription_scheme = $renewal_subs_item->get_meta('_wcsatt_scheme');
+                // // print_better($active_subscription_scheme, 'Active Subscription Scheme');
+                // // die();
+
+                // $renewal_subs_start_date = $renewal_subscription->get_date('start');
+                // // print
+                // // _better($renewal_subs_start_date, 'Renewal Subscription Start Date');
+                // // die();
+
+            }
+
+        }
+
+        fclose($file);
+
+        die();
     }
 }
