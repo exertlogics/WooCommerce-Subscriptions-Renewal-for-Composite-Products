@@ -150,3 +150,50 @@ function print_var_dump($data, $title = 'Var Dump') {
     var_dump($data);
     echo "</pre><br><br>";
 }
+
+// ...existing code...
+
+/**
+ * Custom die function with bootstrap styling and data type handling
+ *
+ * @param mixed $message The message or data to display
+ * @param string $title Optional title for the message
+ * @param string $type Message type (success, warning, error, info)
+ */
+function wsrcp_die($message, $title = '', $type = 'info') {
+    $bs5_css = '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">';
+    $bs5_js = '<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>';
+    
+    // Output Bootstrap CDN
+    echo $bs5_css . $bs5_js;
+    
+    // Start container
+    echo '<div class="container mt-5">';
+    
+    // Title if provided
+    if (!empty($title)) {
+        echo "<h3 class='mb-4'>{$title}</h3>";
+    }
+    
+    // Alert class based on type
+    $alert_class = match($type) {
+        'success' => 'alert-success',
+        'warning' => 'alert-warning',
+        'error'   => 'alert-danger',
+        default   => 'alert-info'
+    };
+    
+    echo "<div class='alert {$alert_class}'>";
+    
+    // Handle different data types
+    if (is_array($message) || is_object($message)) {
+        echo "<pre class='mb-0'>";
+        print_r($message);
+        echo "</pre>";
+    } else {
+        echo $message;
+    }
+    
+    echo "</div></div>";
+    die();
+}

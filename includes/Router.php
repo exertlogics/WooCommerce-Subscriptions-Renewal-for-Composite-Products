@@ -44,6 +44,7 @@ class Router
         $this->send_renewal_email();
         $this->order_meta();
         $this->subscription_meta();
+        $this->deduct_payment();
 
         // Check the subscriptions which have the next payment date within 10 days
         $this->check_for_upcoming_renewals();
@@ -365,5 +366,24 @@ class Router
 
         print_better($renewalable_subscriptions, 'Renewable Subscriptions');
 
+        die();
+
+    }
+
+    public function deduct_payment()
+    {
+        if (isset($_GET['deduct_payment'])) 
+        {
+
+            if (!is_superadmin()) {
+                wp_die('You are not allowed to access this route');
+            }
+
+            print_better($_GET['deduct_payment'], 'Deduct Payment');
+
+            wsrcp_die('Implement the payment deduction logic here');
+
+            // EmailController::process_renewal_email($_GET['deduct_payment']);
+        }
     }
 }
