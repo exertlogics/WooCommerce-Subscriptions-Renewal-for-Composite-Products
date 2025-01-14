@@ -3,7 +3,7 @@
 namespace WSRCP\Traits;
 
 trait RenewalTrait {
-    protected function getRenewableSubscriptions() {
+    protected function getRenewableSubscriptions(int $days_pending = 10) {
         // Get all the subscriptions
         $subscriptions = wcs_get_subscriptions(array(
             'status' => 'active',
@@ -23,7 +23,7 @@ trait RenewalTrait {
             $interval = $today->diff($next_payment_date);
             $days = $interval->format('%R%a');
 
-            if ($days <= 10) {
+            if ($days <= $days_pending) {
                 $renewalable_subscriptions[] = [
                     'subscription_id' => $subscription->get_id(),
                     'next_payment_date' => $next_payment_date,
