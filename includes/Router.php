@@ -5,11 +5,12 @@ namespace WSRCP;
 use WSRCP\Controllers\EmailController;
 use WSRCP\Controllers\RenewSubscription;
 use WSRCP\Traits\RenewalTrait;
+use WSRCP\Traits\PaymentsTrait;
 use Automattic\WooCommerce\Admin\Overrides\Order;
 
 class Router
 {
-    use RenewalTrait;
+    use RenewalTrait, PaymentsTrait;
 
     public function __construct()
     {
@@ -94,7 +95,8 @@ class Router
             $subscription_meta = $subscription->get_meta_data();
             print_better($subscription_meta, 'Subscription Meta');
 
-            die( __FILE__ . ':' . __LINE__ . ' - Function: ' . __FUNCTION__ );
+            // die( __FILE__ . ':' . __LINE__ . ' - Function: ' . __FUNCTION__ );
+            wsrcp_die('Subscription Meta', 'Subscription Meta', 'success');
         }
     }
 
@@ -149,18 +151,24 @@ class Router
             die( __FILE__ . ':' . __LINE__ . ' - Function: ' . __FUNCTION__ );
         }
 
+        if (isset($_GET['order'])) 
+        {
+            print_better($_GET['order'], 'Order');
+            // wsrcp_die('Order', 'Order', 'success');
+
+            $order = wc_get_order($_GET['order']);
+            $order_meta = $order->get_meta_data();
+
+            print_better($order_meta, 'Order Meta');
+
+            wsrcp_die('Order Meta', 'Order Meta', 'success');
+
+        }
+
         if (isset($_GET['order_meta'])) 
         {
-            // die( __FILE__ . ':' . __LINE__ . ' - Function: ' . __FUNCTION__ );
-
-            $log_file = 'wp-content/plugins/woocommerce-subscriptions-renewal-for-composite-products/logs.txt';
-            $file = fopen($log_file, 'a');
-            // Add time date to the log + Add the current file name and line number
-            fwrite($file, date('Y-m-d H:i:s') . ' ' . __FILE__ . ':' . __LINE__ . "\n");
-            fwrite($file, "Order ID ==> " . $_GET['order_meta'] . "\n\n");
-            fclose($file);
-
-            // die("died with logging");
+            print_better($_GET['order_meta'], 'Order Meta');
+            wsrcp_die('Order Meta', 'Order Meta', 'success');
 
             $order = wc_get_order($_GET['order_meta']);
             $items = $order->get_items();
@@ -372,18 +380,41 @@ class Router
 
     public function deduct_payment()
     {
-        if (isset($_GET['deduct_payment'])) 
-        {
+        try {
+            if (isset($_GET['deduct_payment'])) 
+            {
 
-            if (!is_superadmin()) {
-                wp_die('You are not allowed to access this route');
+                // if (!is_superadmin()) {
+                //     wsrcp_die('You are not allowed to access this route');
+                // }
+
+                // print_better($_GET['deduct_payment'], 'Deduct Payment for Subscription ID');
+                wsrcp_log('Deduct Payment for Subscription ID: ' . $_GET['deduct_payment']);
+
+                if (empty($_GET['deduct_payment']) || !isset($_GET['deduct_payment'])) {
+                    // wsrcp_log('REQUIRED Subsription ID! Please provide a subscription ID to deduct payment');
+                    wsrcp_die('Please provide a subscription ID to deduct payment', 'Subscription ID is required', 'error');
+                }
+
+                if (!is_numeric($_GET['deduct_payment'])) {
+                    // wsrcp_log('INVALID Subsription ID! Please provide a valid subscription ID to deduct payment');
+                    wsrcp_die('Please provide a valid subscription ID to deduct payment', 'Invalid Subscription ID', 'error');
+                }
+
+                $order = $this->getPayementEarlier($_GET['deduct_payment']);
+
+                if (!$order) {
+                    wsrcp_die('Error while deducting payment for subscription ID: ' . $_GET['deduct_payment'], 'Error', 'error');
+                }
+
+                print_better($order, 'New Order Created');
+
+                wsrcp_die('Implement the payment deduction logic here', 'Payment Deducted', 'success');
+
+                // EmailController::process_renewal_email($_GET['deduct_payment']);
             }
-
-            print_better($_GET['deduct_payment'], 'Deduct Payment');
-
-            wsrcp_die('Implement the payment deduction logic here');
-
-            // EmailController::process_renewal_email($_GET['deduct_payment']);
+        } catch (\Exception $e) {
+            wsrcp_die('Error while deducting payment for subscription ID: ' . $_GET['deduct_payment'] . '. Error: ' . $e->getMessage(), 'Error', 'error');
         }
     }
 }
