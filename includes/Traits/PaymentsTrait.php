@@ -34,7 +34,10 @@ trait PaymentsTrait {
             $order->add_meta_data('_wsrcp_payment_deducted_for_subscription', $subscription_id);
 
             // Add subscription meta
+            // Meta to keep track of the orders created for the subscription at any point of time
             $subscription->add_meta_data('_wsrcp_payment_deducted_via_order', $order->get_id());
+            // Meta to keep track of the order which is currently being processed for renewal
+            $subscription->update_meta_data('_wsrcp_force_renewal_in_progress_via_order', $order->get_id());
             $subscription->save();
 
             // Save order
