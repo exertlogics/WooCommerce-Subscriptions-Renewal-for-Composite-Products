@@ -43,7 +43,7 @@ class UserDashboard
             if ($forced_order_status === 'completed') {
                 $actions['renew_subscription'] = [
                     'url' => get_permalink($subscription_product_id) .
-                        '?select_items=true&subscription_id=' . 
+                        '?wsrcp_select_items=true&subscription_id=' . 
                         $subscription->get_id() . 
                         '&user_id=' . $user_id . 
                         '&via=user-dashboard&callback_url=' . urlencode(home_url('/my-account/subscriptions/' . $subscription->get_id() . '/')) . 

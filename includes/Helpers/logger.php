@@ -127,6 +127,10 @@ class Logger {
         $this->log($message, 'WARNING');
     }
 
+    public function get_logs() {
+        return file_exists($this->log_file) ? file_get_contents($this->log_file) : '';
+    }
+
     public function __clone() {
         trigger_error('Cloning is not allowed.', E_USER_ERROR);
     }

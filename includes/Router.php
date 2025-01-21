@@ -35,8 +35,42 @@ class Router
         // do_action( 'subscriptions_activated_for_order', $order_id );
         add_action('subscriptions_activated_for_order', [ 'WSRCP\Controllers\RenewSubscription', 'subscriptions_activated_for_order' ], 10, 1);
 
-        add_action('woocommerce_scheduled_subscription_payment', [ 'WSRCP\Controllers\RenewSubscription', 'woocommerce_scheduled_subscription_payment' ], 10, -1);
+        add_action('woocommerce_scheduled_subscription_payment', [ 'WSRCP\Controllers\RenewSubscription', 'woocommerce_scheduled_subscription_payment' ], -1, 1);
 
+        // Add hook to manage the fee to the checkout page or cart page for the order created for the deducted subscription
+        add_action('woocommerce_cart_calculate_fees', [ 'WSRCP\Controllers\DeductedSubscription', 'add_fee_to_cart' ], 10, 1);
+
+        // add_action('woocommerce_before_pay_action', [ 'WSRCP\Controllers\DeductedSubscription', 'handle_order_for_deducted_subscription' ], 10, 1);
+
+        add_action('wsrcp_emails_before_ten_days', [$this, 'wsrcp_emails_before_ten_days_function']);
+        add_action('wsrcp_deduct_payment_before_seven_days', [$this, 'wsrcp_deduct_payment_before_seven_days_function']);
+        add_action('wsrcp_renew_subscriptions', [$this, 'wsrcp_renew_subscriptons_function']);
+        
+
+        // Enable error reporting
+        // ini_set('display_errors', 1);
+        // ini_set('display_startup_errors', 1);
+        // error_reporting(E_ERROR);
+
+
+    }
+
+    public function wsrcp_emails_before_ten_days_function() {
+        // Call the check_for_upcoming_renewals function
+        $router = new Router();
+        $router->send_renewal_emails_before_ten_days();
+    }
+
+    public function wsrcp_deduct_payment_before_seven_days_function() {
+        // Call the check_for_upcoming_renewals function
+        $router = new Router();
+        $router->deduct_payment_before_seven_days();
+    }
+
+    public function wsrcp_renew_subscriptons_function() {
+        // Call the check_for_upcoming_renewals function
+        $router = new Router();
+        $router->renew_subscriptions_now();
     }
 
     public function register_routes()
@@ -49,6 +83,114 @@ class Router
 
         // Check the subscriptions which have the next payment date within 10 days
         $this->check_for_upcoming_renewals();
+
+        $this->create_product();
+
+        $this->display_logs();
+    }
+
+    public function display_logs()
+    {
+        if (isset($_GET['display_logs'])) {
+            // $logs = wsrcp_get_logs() ?? [];
+
+            $log_file = WSRCP_PLUGIN_PATH . 'wsrcp.log';
+            $logs = file_get_contents($log_file) ?? [];
+            
+            // print_better($logs, 'Logs');
+            // wsrcp_die('Logs', 'Logs', 'success');
+
+            // print_r($logs);
+            // die();
+            
+            $logs = explode("\n", $logs);
+            if (empty($logs)) {
+                echo '<div style="font-family: monospace; color: gray;">No logs available.</div>';
+            } else {
+                echo '<div style="font-family: monospace; white-space: pre-wrap; background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 5px;">';
+                foreach ($logs as $log) {
+                    // Extract components of the log using a regex pattern
+                    if (preg_match('/^\[(.*?)\]\s\[(.*?)\]\s(.*?):(\d+)\s(.*)$/', $log, $matches)) {
+                        $timestamp = $matches[1];
+                        $level = $matches[2];
+                        $file = $matches[3];
+                        $line = $matches[4];
+                        $message = $matches[5];
+
+                        // Determine color based on log level
+                        $levelColor = match (strtoupper($level)) {
+                            'INFO' => '#61afef',
+                            'WARNING' => '#e5c07b',
+                            'ERROR' => '#e06c75',
+                            'DEBUG' => '#98c379',
+                            default => '#d4d4d4',
+                        };
+
+                        // Print the formatted log
+                        echo "<div style='margin-bottom: 8px;'>";
+                        echo "<span style='color: #569cd6;'>[$timestamp]</span> ";
+                        echo "<span style='color: $levelColor;'>[$level]</span> ";
+                        echo "<span style='color: #9cdcfe;'>{$file}:{$line}</span> ";
+                        echo "<span style='color: #dcdcdc;'>{$message}</span>";
+                        echo "</div>";
+                    } else {
+                        // If log format doesn't match, print as is
+                        echo "<div style='color: #dcdcdc;'>{$log}</div>";
+                    }
+                }
+                echo '</div>';
+            }
+
+            wsrcp_die('Logs', 'Logs', 'success');
+        }
+    }
+
+
+    public function create_product()
+    {
+        if (isset($_GET['create_product'])) {
+            $title = "WSRCP Subscription Renewal Product";
+            $price = 10;
+            $isVisible = false;
+            $status = "published";
+            $sku = "wsrcp-renewal-product";
+            $password = "wsrcp-renewal-product";
+
+            $product = wc_get_product_id_by_sku($sku);
+
+            if ($product) {
+                print_better($product, 'Product already exists');
+                wsrcp_die('Product already exists', 'Product already exists', 'error');
+            }
+
+            $product = new \WC_Product();
+            $product->set_name($title);
+            $product->set_price($price);
+            $product->set_regular_price($price);
+            $product->set_sale_price($price);
+            $product->set_sku($sku);
+            $product->set_manage_stock(false);
+            $product->set_stock_quantity(0);
+            $product->set_stock_status('instock');
+            $product->set_backorders('no');
+            $product->set_sold_individually(true);
+            $product->set_tax_status('none');
+            $product->set_tax_class('');
+            $product->set_status($status);
+            $product->set_catalog_visibility('hidden');
+            $product_id = $product->save();
+
+            // Now, password-protect the product by updating the underlying post
+            wp_update_post(array(
+                'ID'           => $product_id,
+                'post_password' => $password,
+            ));
+
+
+            print_better($product, 'Product Created');
+
+            wsrcp_die('Product created successfully', 'Product created successfully', 'success');
+        }
     }
 
     public function register_renewal_route()
@@ -66,6 +208,11 @@ class Router
         //     RenewSubscription::renew_subscription();
         //     wp_die('Renew Subscription Router 2');
         // }
+
+        if (isset($_GET['wsrcp_select_items'])) {
+            RenewSubscription::selectItems();
+            return true;
+        }
     }
 
     public function send_renewal_email()
@@ -102,6 +249,22 @@ class Router
 
     public function order_meta()
     {
+        if (isset($_GET['server_time'])) 
+        {
+            print_better(date('Y-m-d H:i:s'), 'Server Time');
+
+            // // Set the default timezone if needed
+            // date_default_timezone_set('Your/Timezone'); // Replace 'Your/Timezone' with your desired timezone (e.g., 'America/New_York')
+
+            // // Get the current server time and format it
+            // $formattedTime = date('F j, Y h:i a');
+
+            // // Display the formatted time
+            // echo $formattedTime;
+
+            wsrcp_die('Server Time', 'Server Time', 'success');
+        }
+
         if (isset($_GET['subscription_renew'])) 
         {
             $subscription_id = $_GET['subscription_renew'];
@@ -359,22 +522,105 @@ class Router
 
     public function check_for_upcoming_renewals()
     {
-        // if (!is_superadmin()) {
-        //     return;
-        // }
 
         if (!isset($_GET['check_for_upcoming_renewals'])) {
             return;
         }
 
-        $renewalable_subscriptions = $this->getRenewableSubscriptions();
+        $renewalable_subscriptions = $this->getRenewableSubscriptions() ?? [];
+        print_better($renewalable_subscriptions, 'All Renewable Subscriptions');
 
-        wsrcp_log('Checking for upcoming renewals');
-        wsrcp_log($renewalable_subscriptions);
+        // Get the subscriptions which dont have days_pending >= 7
+        $renewalable_subscriptions_emailable = array_filter($renewalable_subscriptions, function($subscription) {
+            return $subscription['days_pending'] >= 7;
+        });
+        print_better($renewalable_subscriptions_emailable, 'Renewable Subscriptions Email-able : Not 7 Days');
 
-        print_better($renewalable_subscriptions, 'Renewable Subscriptions');
 
-        die();
+        $renewalable_subscriptions_deductable = array_filter($renewalable_subscriptions, function($subscription) {
+            return $subscription['days_pending'] < 7;
+        });
+        print_better($renewalable_subscriptions_deductable, 'Renewable Subscriptions Deductable : Less than 7 Days');
+
+        wsrcp_die('Check for Upcoming Renewals', 'Check for Upcoming Renewals', 'success');
+
+    }
+
+    public function send_renewal_emails_before_ten_days()
+    {
+        try {
+            $renewalable_subscriptions = $this->getRenewableSubscriptions() ?? [];
+
+            // Get the subscriptions which dont have days_pending >= 7 days, but <= 10 days
+            $renewalable_subscriptions_emailable = array_filter($renewalable_subscriptions, function($subscription) {
+                return $subscription['days_pending'] >= 7;
+            });
+
+            // Send Renewal Email to the users of the subscriptions
+            foreach ($renewalable_subscriptions_emailable as $subscription) {
+                $subscription_id = $subscription['subscription_id'];
+                wsrcp_log('Processing renewal email for subscription ID: ' . $subscription_id);
+                EmailController::process_renewal_email($subscription_id);
+            }
+
+            wsrcp_log('Upcoming Renewals Checked and Renewal Emails Sent');
+            
+            // exit;
+        } catch (\Exception $e) {
+            wsrcp_die('Error while checking for upcoming renewals and sending emails. Error: ' . $e->getMessage(), 'Error', 'error');
+        }
+
+    }
+
+    public function renew_subscriptions_now()
+    {
+        try {
+            $renewalable_subscriptions = $this->getRenewableSubscriptions() ?? [];
+
+        } catch (\Exception $e) {
+            wsrcp_error('Error while renewing subscriptions. Error: ' . $e->getMessage());
+        }
+    }
+
+    public function deduct_payment_before_seven_days()
+    {
+        try {
+            $renewalable_subscriptions = $this->getRenewableSubscriptions() ?? [];
+
+            // // Get the subscriptions which dont have days_pending >= 7 days, but <= 10 days
+            // $renewalable_subscriptions_emailable = array_filter($renewalable_subscriptions, function($subscription) {
+            //     return $subscription['days_pending'] >= 7;
+            // });
+
+            // // Send Renewal Email to the users of the subscriptions
+            // foreach ($renewalable_subscriptions_emailable as $subscription) {
+            //     $subscription_id = $subscription['subscription_id'];
+            //     wsrcp_log('Processing renewal email for subscription ID: ' . $subscription_id);
+            //     EmailController::process_renewal_email($subscription_id);
+            // }
+
+            // Get the subscriptions which have days_pending < 7 days
+            $renewalable_subscriptions_deductable = array_filter($renewalable_subscriptions, function($subscription) {
+                return $subscription['days_pending'] < 7;
+            });
+
+            // Deduct Payment for the subscriptions
+            foreach ($renewalable_subscriptions_deductable as $subscription) {
+                $subscription_id = $subscription['subscription_id'];
+                wsrcp_log('Deducting payment for subscription ID: ' . $subscription_id);
+                $order = $this->getPayementEarlier($subscription_id);
+                // if (!$order) {
+                //     wsrcp_die('Error while deducting payment for subscription ID: ' . $subscription_id, 'Error', 'error');
+                // }
+                // wsrcp_die('Payment deducted for subscription ID: ' . $subscription_id, 'Payment Deducted', 'success');
+            }
+
+            wsrcp_log('Payment Deducted for Upcoming Renewals');
+            
+            // exit;
+        } catch (\Exception $e) {
+            wsrcp_die('Error while deducting the payment. Error: ' . $e->getMessage(), 'Error', 'error');
+        }
 
     }
 
@@ -402,6 +648,7 @@ class Router
                 }
 
                 $order = $this->getPayementEarlier($_GET['deduct_payment']);
+                print_better($order, 'Order');
 
                 if (!$order) {
                     wsrcp_die('Error while deducting payment for subscription ID: ' . $_GET['deduct_payment'], 'Error', 'error');
@@ -418,3 +665,20 @@ class Router
         }
     }
 }
+
+// add_filter('cron_schedules', 'wsrcp_twice_daily_cron_schedule');
+// function wsrcp_twice_daily_cron_schedule($schedules) {
+//     $schedules['twice_daily'] = array(
+//         'interval' => 12 * HOUR_IN_SECONDS, // 12 hours
+//         'display' => __('Twice Daily')
+//     );
+//     return $schedules;
+// }
+
+// add_action('wp', 'wsrcp_schedule_check_for_upcoming_renewals_cron');
+// function wsrcp_schedule_check_for_upcoming_renewals_cron() {
+//     if (!wp_next_scheduled('wsrcp_check_for_upcoming_renewals')) {
+//         wp_schedule_event(time(), 'twice_daily', 'wsrcp_check_for_upcoming_renewals');
+//     }
+// }
+

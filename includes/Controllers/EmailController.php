@@ -10,7 +10,7 @@ class EmailController
         $subscription = wcs_get_subscription($subscription_id);
 
         if ( ! $subscription ) {
-            error_log("Invalid subscription ID: $subscription_id");
+            wsrcp_error("Invalid subscription ID: $subscription_id");
             return;
         }
 
@@ -19,7 +19,7 @@ class EmailController
         $email = $user->user_email;
 
         if ( ! $email ) {
-            error_log("No email found for user ID: $user_id");
+            wsrcp_error("No email found for user ID: $user_id");
             return;
         }
 
@@ -46,7 +46,7 @@ class EmailController
         $template = WSRCP_PLUGIN_PATH . 'templates/emails/subscription-renewal-reminder.php';
 
         if ( ! file_exists( $template ) ) {
-            error_log("Email template not found at: $template");
+            wsrcp_error("Email template not found at: $template");
             return;
         }
 
@@ -65,7 +65,7 @@ class EmailController
             $message = ob_get_clean();
 
             if (empty($message)) {
-                error_log("Email message generation failed.");
+                wsrcp_error("Email message generation failed.");
                 return;
             }
 
@@ -82,17 +82,18 @@ class EmailController
             $sent = wp_mail($email, $subject, $message, $headers);
 
             if ( ! $sent ) {
-                error_log("Failed to send email to: $email");
-                print_better("Failed to send email to: $email", 'Error');
+                wsrcp_error("Failed to send email to: $email");
+                // print_better("Failed to send email to: $email", 'Error');
             }
 
-            print_better("Email sent to: $email", 'Success');
+            // print_better("Email sent to: $email", 'Success');
+            wsrcp_log("Subscription renewal email sent to: $email for subscription ID: $subscription_id");
 
         } catch (\Exception $e) {
-            error_log("Error generating email: " . $e->getMessage());
-            print_better($e->getMessage(), 'Error');
+            wsrcp_error("Error generating email: " . $e->getMessage());
+            // print_better($e->getMessage(), 'Error');
         }
 
-        wp_die();
+        // wp_die();
     }
 }

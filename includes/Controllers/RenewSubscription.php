@@ -178,6 +178,13 @@ class RenewSubscription
      */
     public static function subscriptions_activated_for_order($order)
     {
+        // get cookie wsrcp_renew_subscription
+        $wsrcp_renew_subscription = $_COOKIE['wsrcp_renew_subscription'];
+
+        if (!$wsrcp_renew_subscription || $wsrcp_renew_subscription === 'false') {
+            return;
+        }
+
         $log_file = 'wp-content/plugins/woocommerce-subscriptions-renewal-for-composite-products/logs.txt';
         $file = fopen($log_file, 'a');
         // Add time date to the log + Add the current file name and line number
@@ -393,6 +400,14 @@ class RenewSubscription
 
 
         fclose($file);
+
+        // Delete the cookies
+        // setcookie('wsrcp_renew_subscription', '', time() - 3600, '/');
+        // setcookie('wsrcp_subscription_id', '', time() - 3600, '/');
+        // setcookie('wsrcp_user_id', '', time() - 3600, '/');
+        // setcookie('wsrcp_via', '', time() - 3600, '/');
+        // setcookie('wsrcp_callback_url', '', time() - 3600, '/');
+        // setcookie('wsrcp_cache', '', time() - 3600, '/');
     }
 
     // public static function woocommerce_scheduled_subscription_payment($subscription_id)
@@ -460,5 +475,40 @@ class RenewSubscription
         fclose($file);
     }
 
+    public static function selectItems()
+    {
+        $wsrcp_select_items = $_GET['wsrcp_select_items'];
+
+        if ($wsrcp_select_items === 'true') {
+            $subscription_id = $_GET['subscription_id'];
+            $user_id = $_GET['user_id'];
+            $via = $_GET['via'];
+            $callback_url = $_GET['callback_url'];
+            $cache = $_GET['cache'];
+
+            // Now save all these values to cookies
+            $validity_time = time() + (24 * 60 * 60); // 24 hours
+            setcookie('wsrcp_select_items',   $wsrcp_select_items,    $validity_time, '/');
+            setcookie('wsrcp_subscription_id',      $subscription_id,       $validity_time, '/');
+            setcookie('wsrcp_user_id',              $user_id,               $validity_time, '/');
+            setcookie('wsrcp_via',                  $via,                   $validity_time, '/');
+            setcookie('wsrcp_callback_url',         $callback_url,          $validity_time, '/');
+            setcookie('wsrcp_cache',                $cache,                 $validity_time, '/');
+
+            // Output JavaScript to show an alert
+            $user = get_user_by('id', $user_id);
+            $html = '';
+            $html .= '<div class="alert success">';
+            $html .= '<span class="closebtn" onclick="this.parentElement.style.display=\'none\';">&times;</span>';
+            $html .= '<strong>Welcome back ' . $user->first_name . '!</strong> We\'re happy to see you back. Please select the products you would like to receive this month below and proceed to checkout.';
+            $html .= '</div>';
+
+            echo $html;
+
+            // return true;
+        }
+
+        // wsrcp_die('Please select the items you would like to receive this month.', 'Select Items', 'info');
+    }
     
 }

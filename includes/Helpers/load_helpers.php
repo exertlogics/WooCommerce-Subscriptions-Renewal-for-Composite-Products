@@ -31,5 +31,9 @@ function wsrcp_debug($message) {
 }
 
 function wsrcp_warn($message) {
-    Logger::getInstance()->warn($message);
+    Logger::getInstance()->warning($message);
+}
+
+function wsrcp_get_logs() {
+    Logger::getInstance()->get_logs();
 }
